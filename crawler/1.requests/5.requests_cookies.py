@@ -25,5 +25,5 @@ for cookie in cookies_list:
 print(cookies_dict)
 res = requests.get(url, headers=headers, cookies=cookies_dict)
 
-with open("cookies.html", "wb") as f:
+with open("../cookies.html", "wb") as f:
     f.write(res.content)

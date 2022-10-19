@@ -8,5 +8,5 @@ url = "https://github.com/startshineye"
 
 res = requests.get(url, headers=headers)
 
-with open("headers_with_cookie.html", "wb") as f:
+with open("../headers_with_cookie.html", "wb") as f:
     f.write(res.content)
