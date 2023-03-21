@@ -1,0 +1,69 @@
+PUT /jk_v1_graph_relation
+{
+"settings": {
+"index": {
+"number_of_shards": "1",
+"number_of_replicas": "1"
+}
+}
+,"mappings":{
+      "properties" : {
+        "deleted" : {
+          "type" : "boolean"
+        },
+        "entities" : {
+          "type" : "nested",
+          "properties" : {
+            "entity_id" : {
+              "type" : "long"
+            },
+            "entity_name" : {
+              "type" : "text"
+            },
+            "entity_type" : {
+              "type" : "keyword"
+            },
+            "is_end" : {
+              "type" : "boolean"
+            },
+            "is_start" : {
+              "type" : "boolean"
+            }
+          }
+        },
+        "last_update" : {
+          "type" : "date",
+          "format" : "yyyy-MM-dd HH:mm:ss||yyyy-MM-dd||epoch_millis"
+        },
+        "priority_level" : {
+          "type" : "integer"
+        },
+        "pub_time_max" : {
+          "type" : "date",
+          "format" : "yyyy-MM-dd HH:mm:ss||yyyy-MM-dd||epoch_millis"
+        },
+        "pub_time_min" : {
+          "type" : "date",
+          "format" : "yyyy-MM-dd HH:mm:ss||yyyy-MM-dd||epoch_millis"
+        },
+        "relation_code" : {
+          "type" : "keyword"
+        },
+        "relation_id" : {
+          "type" : "long"
+        },
+        "relation_keys" : {
+          "type" : "keyword"
+        },
+        "relation_name" : {
+          "type" : "keyword"
+        },
+        "relation_type" : {
+          "type" : "keyword"
+        },
+        "source_count" : {
+          "type" : "long"
+        }
+      }
+}
+}

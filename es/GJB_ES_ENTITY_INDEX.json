@@ -1,0 +1,135 @@
+PUT /jk_v1_graph_entity
+{
+  "settings": {
+    "index": {
+      "number_of_shards": "1",
+      "number_of_replicas": "1"
+    }
+  }
+,"mappings":{
+  "properties" : {
+    "deleted" : {
+      "type" : "boolean"
+    },
+    "entity_id" : {
+      "type" : "long"
+    },
+    "entity_name" : {
+      "type" : "text"
+    },
+    "entity_type" : {
+      "type" : "keyword"
+    },
+    "time" : {
+      "type" : "long"
+    },
+    "filters" : {
+      "type" : "nested",
+      "properties" : {
+        "filterjson" : {
+          "type" : "text"
+        }
+      }
+    },
+    "last_update" : {
+      "type" : "date",
+      "format" : "yyyy-MM-dd HH:mm:ss||yyyy-MM-dd||epoch_millis||strict_date_optional_time"
+    },
+    "props" : {
+      "type" : "nested",
+      "properties" : {
+        "GJBKM_LAW" : {
+          "properties" : {
+            "law_name" : {
+              "type" : "keyword"
+            }
+          }
+        },
+        "GJBKM_ORGANIZATION" : {
+          "properties" : {
+            "organization_name" : {
+              "type" : "keyword"
+            }
+          }
+        },
+        "GJBKM_PERSON" : {
+          "properties" : {
+            "person_address" : {
+              "type" : "keyword"
+            },
+            "person_name" : {
+              "type" : "keyword"
+            },
+            "person_position" : {
+              "type" : "keyword"
+            }
+          }
+        },
+        "GJBKM_STANDARD" : {
+          "properties" : {
+            "standard_abbreviate" : {
+              "type" : "keyword"
+            },
+            "standard_en_name" : {
+              "type" : "keyword"
+            },
+            "standard_name" : {
+              "type" : "keyword"
+            },
+            "standard_no" : {
+              "type" : "keyword"
+            },
+            "standard_principle" : {
+              "type" : "keyword"
+            },
+            "standard_revise" : {
+              "type" : "keyword"
+            },
+            "standard_status" : {
+              "type" : "keyword"
+            },
+            "standard_sumary" : {
+              "type" : "keyword"
+            },
+            "standard_type" : {
+              "type" : "keyword"
+            },
+            "standrad_category_no1" : {
+              "type" : "keyword"
+            },
+            "standrad_category_no2" : {
+              "type" : "keyword"
+            },
+            "standrad_category_no3" : {
+              "type" : "keyword"
+            },
+            "standrad_secret_level" : {
+              "type" : "keyword"
+            },
+            "standrad_version" : {
+              "type" : "keyword"
+            }
+          }
+        },
+        "GJBKM_TERM" : {
+          "properties" : {
+            "term_name" : {
+              "type" : "keyword"
+            }
+          }
+        },
+        "GJBKM_TIME" : {
+          "properties" : {
+            "time" : {
+              "type" : "keyword"
+            }
+          }
+        }
+      }
+    },
+    "source_count" : {
+      "type" : "long"
+    }
+  }
+}
+}
