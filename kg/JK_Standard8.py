@@ -43,7 +43,7 @@ base_url = 'http://192.168.100.7:9201'
 username = ""
 password = ""
 
-workbook = xlrd.open_workbook(r'./GJB_V4.xlsx')
+workbook = xlrd.open_workbook(r'./GJB_V5.xlsx')
 sheets_ = workbook.sheets()[7]
 # 定义空列表，存储Excel数据
 tables = []
