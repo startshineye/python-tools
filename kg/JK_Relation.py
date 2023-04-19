@@ -27,6 +27,7 @@ relation_code_dict = {'文献关联关系': 'GJBKM_quote',
                     '执行依据': 'GJBKM_enforcementBasis',
                     '代替': 'GJBKM_replace',
                     '被替代': 'GJBKM_replaced',
+                    '历史标准': 'GJBKM_history_standard'
                     }
 
 
@@ -90,7 +91,7 @@ base_url = 'http://192.168.100.7:9201'
 username = ""
 password = ""
 
-workbook = xlrd.open_workbook(r'./GJB_V5.xlsx')
+workbook = xlrd.open_workbook(r'./GJB_V6.xlsx')
 sheets_ = workbook.sheets()[9]
 # 定义空列表，存储Excel数据
 tables = []
