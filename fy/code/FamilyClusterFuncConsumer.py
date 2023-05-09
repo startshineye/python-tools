@@ -170,11 +170,11 @@ if __name__ == '__main__':
     while True:
         # 从redis队列中获取矩阵
         azimuth_matrix = get_matrix_from_redis(redis_client, redis_key_azimuth_matrix)
-        print(azimuth_matrix)
+        print(f'redis->azimuth_matrix:{azimuth_matrix}')
         velocity_matrix = get_matrix_from_redis(redis_client, redis_key_velocity_matrix)
-        print(velocity_matrix)
+        print(f'redis->velocity_matrix:{velocity_matrix}')
         corrcoef_matrix = get_matrix_from_redis(redis_client, redis_key_corrcoef_matrix)
-        print(corrcoef_matrix)
+        print(f'redis->corrcoef_matrix:{corrcoef_matrix}')
 
         # 将矩阵转换成c_float类型的二维数组
         matrixA = (ctypes.c_float * (m * n))(*np.ravel(azimuth_matrix).astype(np.float32))
@@ -189,15 +189,16 @@ if __name__ == '__main__':
         # 2、PMCC计算
         FamilyClusterFunc(OutputAV, matrixA, matrixV, matrixC)
 
+        find_data_from_matrix(OutputAV, matrixA, matrixV, matrixC, 15, 60)
+
         # 数据打印
-        print_ctypes_array(OutputAV, "../output.txt")
-
-        c_OutputAV_arr = (ctypes.c_float * (len(OutputAV) * len(OutputAV[0])))(*np.ravel(OutputAV).astype(np.float32))
+        # print_ctypes_array(OutputAV, "../output.txt")
+        # c_OutputAV_arr = (ctypes.c_float * (len(OutputAV) * len(OutputAV[0])))(*np.ravel(OutputAV).astype(np.float32))
         # 将c_float类型的二维数组转换成NumPy数组
-        np_OutputAV_arr = np.ctypeslib.as_array(c_OutputAV_arr).reshape((len(OutputAV), len(OutputAV[0])))
+        # np_OutputAV_arr = np.ctypeslib.as_array(c_OutputAV_arr).reshape((len(OutputAV), len(OutputAV[0])))
 
-        db.update("UPDATE dp_single_array_event set matrixA=%s,matrixV=%s,matrixC=%s,matrixAV=%s", (matrixA, matrixV,
-                                                                                                    matrixC,
-                                                                                                    np_OutputAV_arr))
+        #db.update("UPDATE dp_single_array_event set matrixA=%s,matrixV=%s,matrixC=%s,matrixAV=%s", (matrixA, matrixV,
+        #                                                                                            matrixC,
+        #                                                                                            np_OutputAV_arr))
         # 暂停10秒
-        time.sleep(100)
+        time.sleep(10)

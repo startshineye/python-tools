@@ -3,12 +3,31 @@ import time
 import numpy as np
 from datetime import datetime
 import ctypes
+import pickle
 from RedisUtil import RedisClient
 
 m = 15000
 n = 5
 
 redis_key_origin_buffer = 'origin_buffer'
+redis_key_origin_single_buffer1 = 'origin_single_buffer1'
+redis_key_origin_single_buffer2 = 'origin_single_buffer2'
+redis_key_origin_single_buffer3 = 'origin_single_buffer3'
+redis_key_origin_single_buffer4 = 'origin_single_buffer4'
+redis_key_origin_single_buffer5 = 'origin_single_buffer5'
+
+
+def write_single_buffer_to_redis(redis_client, key, value):
+    value = list(value)
+    pickled = pickle.dumps(value)
+    redis_client.set(key, pickled)
+
+
+def read_single_buffer_from_redis(redis_client, key):
+    pickled = redis_client.get(key)
+    if pickled is not None:
+        return pickle.loads(pickled)
+    return (float_type * 15000)()
 
 
 def get_matrix_from_redis(redis_client, key):
@@ -108,10 +127,15 @@ buffer5 = (float_type * 15000)()
 
 if __name__ == '__main__':
     redis_client = RedisClient(host='localhost', port=6379, password='Founder123', db=0)
+
+    pickled = None
+    if pickle is not None:
+        print(f'pickle{pickle} is not None')
+
     # 读取并推送数据,每10秒推1000个
     start = time.time()
     while True:
-        if time.time() - start > 10:  # 10秒推送一次
+        if time.time() - start > 3:  # 10秒推送一次
             print(f'开始计数:{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')
             # 读取1000个元素
             data1 = np.frombuffer(f1.read(4000), np.float32)
@@ -120,9 +144,14 @@ if __name__ == '__main__':
             data4 = np.frombuffer(f4.read(4000), np.float32)
             data5 = np.frombuffer(f5.read(4000), np.float32)
 
-            # data1 = np.frombuffer(f1.read(1000 * np.float32.itemsize), np.float32)
-            # data2 = np.frombuffer(f2.read(1000 * np.float32.itemsize), np.float32)
-            # ...
+
+            # redis中读取buffer数据
+            buffer1 = read_single_buffer_from_redis(redis_client, redis_key_origin_single_buffer1)
+            buffer2 = read_single_buffer_from_redis(redis_client, redis_key_origin_single_buffer2)
+            buffer3 = read_single_buffer_from_redis(redis_client, redis_key_origin_single_buffer3)
+            buffer4 = read_single_buffer_from_redis(redis_client, redis_key_origin_single_buffer4)
+            buffer5 = read_single_buffer_from_redis(redis_client, redis_key_origin_single_buffer5)
+
 
             # 移除buffer头部1000个元素
             buffer1 = buffer1[1000:] + data1.tolist()
@@ -131,8 +160,15 @@ if __name__ == '__main__':
             buffer4 = buffer4[1000:] + data4.tolist()
             buffer5 = buffer5[1000:] + data5.tolist()
 
+            # 将buffer数据写入到redis
+            write_single_buffer_to_redis(redis_client, redis_key_origin_single_buffer1, buffer1)
+            write_single_buffer_to_redis(redis_client, redis_key_origin_single_buffer2, buffer2)
+            write_single_buffer_to_redis(redis_client, redis_key_origin_single_buffer3, buffer3)
+            write_single_buffer_to_redis(redis_client, redis_key_origin_single_buffer4, buffer4)
+            write_single_buffer_to_redis(redis_client, redis_key_origin_single_buffer5, buffer5)
+
             print("-------------------------------------------------------------------")
-            # print(buffer1)
+            print(buffer1)
 
             ndarray = contract(buffer1, buffer2, buffer3, buffer4, buffer5)
             print(ndarray)
