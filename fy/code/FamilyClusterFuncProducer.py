@@ -22,10 +22,29 @@ redis_key_AzimuthCalCallBack_Corrcoef = 'AzimuthCalCallBack_Corrcoef'
 
 
 class AzimuthCalCallBackData:
-    def __init__(self, Azimuth, Velocity, Corrcoef):
+    def __init__(self):
+        self.Azimuth = None
+        self.Velocity = None
+        self.Corrcoef = None
+
+    def set_Azimuth(self, Azimuth):
         self.Azimuth = Azimuth
+
+    def set_Velocity(self, Velocity):
         self.Velocity = Velocity
+
+    def set_Corrcoef(self, Corrcoef):
         self.Corrcoef = Corrcoef
+
+    def get_Azimuth(self):
+        return self.Azimuth
+
+    def get_Velocity(self):
+        return self.Velocity
+
+    def get_Corrcoef(self):
+        return self.Corrcoef
+
 
 
 def get_matrix_from_redis(redis_client, key):
@@ -38,6 +57,7 @@ def get_matrix_from_redis(redis_client, key):
 def get_c_array_from_redis(redis_client, key):
     result = redis_client.lpop(key)
     if result:
+        print(result)
         print(type(result))
         result_json = json.loads(result)
         azimuth_value = result_json[redis_key_AzimuthCalCallBack_Azimuth]
@@ -53,18 +73,21 @@ def get_c_array_from_redis(redis_client, key):
         corrcoef_obj = np.array(corrcoef_value)
         c_corrcoef_obj = (ctypes.c_float * len(corrcoef_obj))(*corrcoef_obj)
 
-        data = AzimuthCalCallBackData(c_azimuth_obj, c_velocity_obj, c_corrcoef_obj)
-        print(f'if result{data}')
-        return data
+        d = {
+            'k_azimuth': c_azimuth_obj,
+            'k_velocity': c_velocity_obj,
+            'k_corrcoef': c_corrcoef_obj
+        }
+        return d
     else:
         return result
 
 
-def push_data_to_matrix(redis_client, azimuthCalCallBackData):
+def push_data_to_matrix(redis_client, d):
     # 将c_float数组转换成15x1的向量
-    azimuth_vector = np.ctypeslib.as_array(azimuthCalCallBackData.Azimuth).reshape((m, 1))
-    velocity_vector = np.ctypeslib.as_array(azimuthCalCallBackData.Velocity).reshape((m, 1))
-    corrcoef_vector = np.ctypeslib.as_array(azimuthCalCallBackData.Corrcoef).reshape((m, 1))
+    azimuth_vector = np.ctypeslib.as_array(d['k_azimuth']).reshape((m, 1))
+    velocity_vector = np.ctypeslib.as_array(d['k_velocity']).reshape((m, 1))
+    corrcoef_vector = np.ctypeslib.as_array(d['k_corrcoef']).reshape((m, 1))
 
     # 从redis获取举着 将向量插入到矩阵末尾
     azimuth_matrix = get_matrix_from_redis(redis_client, redis_key_azimuth_matrix)
@@ -85,17 +108,16 @@ if __name__ == '__main__':
     redis_client = RedisClient(host='localhost', port=6379, password='Founder123', db=0)
     while True:
         # 1、从redis里面获取对应的矩阵，如果没有的话初始化15x60的零矩阵
-        AzimuthCalCallBackData = get_c_array_from_redis(redis_client, queue_name)
-        print(AzimuthCalCallBackData)
-        if AzimuthCalCallBackData:
-            print(AzimuthCalCallBackData.Azimuth)
-            print(AzimuthCalCallBackData.Velocity)
-            print(AzimuthCalCallBackData.Corrcoef)
-            print(type(AzimuthCalCallBackData.Azimuth))
-            push_data_to_matrix(redis_client, AzimuthCalCallBackData)
+        d = get_c_array_from_redis(redis_client, queue_name)
+        print(d)
+        if d:
+            print(d['k_azimuth'])
+            print(d['k_velocity'])
+            print(d['k_corrcoef'])
+            push_data_to_matrix(redis_client, d)
 
-        # ndarray = get_matrix_from_redis(redis_client, redis_key_azimuth_matrix)
-        #print(ndarray)
+        ndarray = get_matrix_from_redis(redis_client, redis_key_azimuth_matrix)
+        print(f'get_matrix_from_redis :{ndarray}')
 
         #azimuth = (c_float * 15)()
         #azimuth_vector = np.ctypeslib.as_array(azimuth).reshape((m, 1))

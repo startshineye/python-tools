@@ -7,6 +7,7 @@ import numpy as np
 import time
 from MysqlDBUtils import MysqlDB
 from RedisUtil import RedisClient
+from CommonUtils import *
 
 redis_key_azimuth_matrix = 'azimuth_matrix'
 redis_key_velocity_matrix = 'velocity_matrix'
@@ -186,10 +187,12 @@ if __name__ == '__main__':
         matrixV = np.ctypeslib.as_array(matrixV).reshape((m, n))
         matrixC = np.ctypeslib.as_array(matrixC).reshape((m, n))
 
-        # 2、PMCC计算
-        FamilyClusterFunc(OutputAV, matrixA, matrixV, matrixC)
+        output_matrix(matrixA, "./matrixA.txt")
 
-        find_data_from_matrix(OutputAV, matrixA, matrixV, matrixC, 15, 60)
+        # 2、PMCC计算
+        # FamilyClusterFunc(OutputAV, matrixA, matrixV, matrixC)
+
+        # find_data_from_matrix(OutputAV, matrixA, matrixV, matrixC, 15, 60)
 
         # 数据打印
         # print_ctypes_array(OutputAV, "../output.txt")

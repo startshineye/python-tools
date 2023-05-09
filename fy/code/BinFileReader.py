@@ -85,11 +85,12 @@ def contract(c_float_array_buffer1: (ctypes.c_float * 15000)(), c_float_array_bu
     buffer4 = np.ctypeslib.as_array(c_float_array_buffer4)
     buffer5 = np.ctypeslib.as_array(c_float_array_buffer5)
     result = np.zeros((15000, 5), np.float32)
-    result[:, 0] = buffer1
-    result[:, 1] = buffer2
-    result[:, 2] = buffer3
-    result[:, 3] = buffer4
-    result[:, 4] = buffer5
+    if len(buffer1) == 15000 and len(buffer2) == 15000 and len(buffer3) == 15000 and len(buffer4) == 15000 and len(buffer5) == 15000:
+        result[:, 0] = buffer1
+        result[:, 1] = buffer2
+        result[:, 2] = buffer3
+        result[:, 3] = buffer4
+        result[:, 4] = buffer5
     return result
 
 
@@ -102,7 +103,14 @@ def print_matrix(array, m, n):
     list = nparray.tolist()
 
     # 打印列表
-    print(list)
+
+
+def print_non_zero_column(matrix):
+    count = 0
+    for row in matrix:
+        if any(row != 0):
+            count += 1
+    return count
 
 
 # 定义数据类型和数组
@@ -127,10 +135,6 @@ buffer5 = (float_type * 15000)()
 
 if __name__ == '__main__':
     redis_client = RedisClient(host='localhost', port=6379, password='Founder123', db=0)
-
-    pickled = None
-    if pickle is not None:
-        print(f'pickle{pickle} is not None')
 
     # 读取并推送数据,每10秒推1000个
     start = time.time()
@@ -168,15 +172,13 @@ if __name__ == '__main__':
             write_single_buffer_to_redis(redis_client, redis_key_origin_single_buffer5, buffer5)
 
             print("-------------------------------------------------------------------")
-            print(buffer1)
 
             ndarray = contract(buffer1, buffer2, buffer3, buffer4, buffer5)
-            print(ndarray)
+            print(f'print_non_zero_column:{print_non_zero_column(ndarray)}')
             push_data_to_matrix(redis_client, ndarray)
 
             print("-------------------------redis------------------------------------------")
             redis = get_matrix_from_redis(redis_client, redis_key_origin_buffer)
-            print(redis)
 
             # array = ndarray_to_ctype_array(ndarray, 15000, 5)
 

@@ -1,21 +1,12 @@
-import ctypes
-from RedisUtil import RedisClient
-import pickle
+import numpy as np
 
-# 写入redis
-a = (ctypes.c_float * 15000)()
-for i in range(15000):
-    a[i] = i * 1.1
+matrix = np.array([[1,2,3], [4,5,6], [7,8,9]])
 
-print(list(a))
-
-a = list(a)
-redis_client = RedisClient(host='localhost', port=6379, password='Founder123', db=0)
-
-pickled = pickle.dumps(a)
-redis_client.set('a', pickled)
-
-pickled = redis_client.get('a')
-a = pickle.loads(pickled)
-print(a)
-
+with open('./matrix.txt', 'w') as f:
+    # 遍历矩阵的行
+    for row in matrix:
+        # 遍历行的每一列,输出到文件
+        for col in row:
+            f.write(str(col) + ' ')
+        # 换行
+        f.write('\n')
