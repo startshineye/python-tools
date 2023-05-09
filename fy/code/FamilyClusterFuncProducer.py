@@ -21,32 +21,6 @@ redis_key_AzimuthCalCallBack_Velocity = 'AzimuthCalCallBack_Velocity'
 redis_key_AzimuthCalCallBack_Corrcoef = 'AzimuthCalCallBack_Corrcoef'
 
 
-class AzimuthCalCallBackData:
-    def __init__(self):
-        self.Azimuth = None
-        self.Velocity = None
-        self.Corrcoef = None
-
-    def set_Azimuth(self, Azimuth):
-        self.Azimuth = Azimuth
-
-    def set_Velocity(self, Velocity):
-        self.Velocity = Velocity
-
-    def set_Corrcoef(self, Corrcoef):
-        self.Corrcoef = Corrcoef
-
-    def get_Azimuth(self):
-        return self.Azimuth
-
-    def get_Velocity(self):
-        return self.Velocity
-
-    def get_Corrcoef(self):
-        return self.Corrcoef
-
-
-
 def get_matrix_from_redis(redis_client, key):
     result = redis_client.get_matrix(key)
     if result is None:
