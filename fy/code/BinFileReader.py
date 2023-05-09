@@ -3,6 +3,31 @@ import time
 import numpy as np
 from datetime import datetime
 import ctypes
+from RedisUtil import RedisClient
+
+m = 15000
+n = 5
+
+redis_key_origin_buffer = 'origin_buffer'
+
+
+def get_matrix_from_redis(redis_client, key):
+    result = redis_client.get_matrix(key)
+    if result is None:
+        return np.zeros((m, n))
+    return result
+
+
+def push_data_to_matrix(redis_client, origin_buffer_nparray):
+    # 将新的矩阵插入到redis中
+    redis_client.set_matrix(redis_key_origin_buffer, origin_buffer_nparray)
+
+
+def get_matrix_from_redis(redis_client, key):
+    result = redis_client.get_matrix(key)
+    if result is None:
+        return np.zeros((m, n))
+    return result
 
 
 def ndarray_to_ctype_array(src, m, n):
@@ -81,35 +106,43 @@ buffer3 = (float_type * 15000)()
 buffer4 = (float_type * 15000)()
 buffer5 = (float_type * 15000)()
 
-# 读取并推送数据,每10秒推1000个
-start = time.time()
-while True:
-    if time.time() - start > 3:  # 10秒推送一次
-        print(f'开始计数:{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')
-        # 读取1000个元素
-        data1 = np.frombuffer(f1.read(4000), np.float32)
-        data2 = np.frombuffer(f2.read(4000), np.float32)
-        data3 = np.frombuffer(f3.read(4000), np.float32)
-        data4 = np.frombuffer(f4.read(4000), np.float32)
-        data5 = np.frombuffer(f5.read(4000), np.float32)
+if __name__ == '__main__':
+    redis_client = RedisClient(host='localhost', port=6379, password='Founder123', db=0)
+    # 读取并推送数据,每10秒推1000个
+    start = time.time()
+    while True:
+        if time.time() - start > 10:  # 10秒推送一次
+            print(f'开始计数:{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')
+            # 读取1000个元素
+            data1 = np.frombuffer(f1.read(4000), np.float32)
+            data2 = np.frombuffer(f2.read(4000), np.float32)
+            data3 = np.frombuffer(f3.read(4000), np.float32)
+            data4 = np.frombuffer(f4.read(4000), np.float32)
+            data5 = np.frombuffer(f5.read(4000), np.float32)
 
-        # data1 = np.frombuffer(f1.read(1000 * np.float32.itemsize), np.float32)
-        # data2 = np.frombuffer(f2.read(1000 * np.float32.itemsize), np.float32)
-        # ...
+            # data1 = np.frombuffer(f1.read(1000 * np.float32.itemsize), np.float32)
+            # data2 = np.frombuffer(f2.read(1000 * np.float32.itemsize), np.float32)
+            # ...
 
-        # 移除buffer头部1000个元素
-        buffer1 = buffer1[1000:] + data1.tolist()
-        buffer2 = buffer2[1000:] + data2.tolist()
-        buffer3 = buffer3[1000:] + data3.tolist()
-        buffer4 = buffer4[1000:] + data4.tolist()
-        buffer5 = buffer5[1000:] + data5.tolist()
+            # 移除buffer头部1000个元素
+            buffer1 = buffer1[1000:] + data1.tolist()
+            buffer2 = buffer2[1000:] + data2.tolist()
+            buffer3 = buffer3[1000:] + data3.tolist()
+            buffer4 = buffer4[1000:] + data4.tolist()
+            buffer5 = buffer5[1000:] + data5.tolist()
 
-        print("-------------------------------------------------------------------")
-        # print(buffer1)
+            print("-------------------------------------------------------------------")
+            # print(buffer1)
 
-        ndarray = contract(buffer1, buffer2, buffer3, buffer4, buffer5)
-        print(ndarray)
-        array = ndarray_to_ctype_array(ndarray, 15000, 5)
+            ndarray = contract(buffer1, buffer2, buffer3, buffer4, buffer5)
+            print(ndarray)
+            push_data_to_matrix(redis_client, ndarray)
 
-        start = time.time()  # 重新计时
+            print("-------------------------redis------------------------------------------")
+            redis = get_matrix_from_redis(redis_client, redis_key_origin_buffer)
+            print(redis)
+
+            # array = ndarray_to_ctype_array(ndarray, 15000, 5)
+
+            start = time.time()  # 重新计时
 # buffer1-5为最终结果,5个15000x5数组

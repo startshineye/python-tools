@@ -48,7 +48,6 @@ class RedisClient:
 
     def get_matrix(self, key):
         serialized_matrix = self._conn.get(key)
-        print(serialized_matrix)
         if serialized_matrix is None:
             return None
         return np.loads(serialized_matrix)

@@ -6,6 +6,7 @@ import numpy as np
 from ctypes import *
 import ctypes
 import time
+import json
 
 m = 15
 n = 60
@@ -37,16 +38,18 @@ def get_matrix_from_redis(redis_client, key):
 def get_c_array_from_redis(redis_client, key):
     result = redis_client.lpop(key)
     if result:
-        azimuth_value = result[redis_key_AzimuthCalCallBack_Azimuth]
+        print(type(result))
+        result_json = json.loads(result)
+        azimuth_value = result_json[redis_key_AzimuthCalCallBack_Azimuth]
         azimuth_obj = np.array(azimuth_value)
 
         c_azimuth_obj = (ctypes.c_float * len(azimuth_obj))(*azimuth_obj)
 
-        velocity_value = result[redis_key_AzimuthCalCallBack_Velocity]
+        velocity_value = result_json[redis_key_AzimuthCalCallBack_Velocity]
         velocity_obj = np.array(velocity_value)
         c_velocity_obj = (ctypes.c_float * len(velocity_obj))(*velocity_obj)
 
-        corrcoef_value = result[redis_key_AzimuthCalCallBack_Corrcoef]
+        corrcoef_value = result_json[redis_key_AzimuthCalCallBack_Corrcoef]
         corrcoef_obj = np.array(corrcoef_value)
         c_corrcoef_obj = (ctypes.c_float * len(corrcoef_obj))(*corrcoef_obj)
 
@@ -91,10 +94,10 @@ if __name__ == '__main__':
             print(type(AzimuthCalCallBackData.Azimuth))
             push_data_to_matrix(redis_client, AzimuthCalCallBackData)
 
-        ndarray = get_matrix_from_redis(redis_client, redis_key_azimuth_matrix)
-        print(ndarray)
+        # ndarray = get_matrix_from_redis(redis_client, redis_key_azimuth_matrix)
+        #print(ndarray)
 
-        azimuth = (c_float * 15)()
-        azimuth_vector = np.ctypeslib.as_array(azimuth).reshape((m, 1))
+        #azimuth = (c_float * 15)()
+        #azimuth_vector = np.ctypeslib.as_array(azimuth).reshape((m, 1))
         # 暂停10秒
-        time.sleep(100)
+        time.sleep(10)
