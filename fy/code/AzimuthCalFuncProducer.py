@@ -3,6 +3,7 @@
 # 事件检测方位角模块生产者模块:包括方位角、速度、相关性
 import time
 import numpy as np
+from datetime import datetime
 import json
 from AzimuthCalAlgo import AzimuthCalFunc
 from RedisUtil import RedisClient
@@ -73,12 +74,14 @@ def gen_azimuth_velocity_corrcoef(redis_client, azimuth_ndarray, velocity_ndarra
 
     # 将 JSON 字符串添加到队列中
     redis_client.rpush(queue_name, json_str)
+    print(f'AzimuthCalFuncProducer rpush json_str:{json_str}')
 
 
 if __name__ == '__main__':
     redis_client = RedisClient(host='localhost', port=6379, password='Founder123', db=0)
     func = AzimuthCalFunc()
     while True:
+        print(f'begin 开始计数:{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')
         ndarray = get_matrix_from_redis(redis_client, redis_key_origin_buffer)
         ctype_array_buffer = ndarray_to_ctype_array(ndarray, m, n)
         func.AzimuthCalCallBack(ctype_array_buffer)

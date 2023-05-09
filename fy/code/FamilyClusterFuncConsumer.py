@@ -17,7 +17,8 @@ redis_key_corrcoef_matrix = 'corrcoef_matrix'
 def get_matrix_from_redis(redis_client, key):
     result = redis_client.get_matrix(key)
     if result is None:
-        return np.zeros((m, n))
+        # r-15 c-600
+        return np.zeros((15, 600))
     return result
 
 
@@ -68,8 +69,8 @@ sp = SysParameters((150, 150, 150, 150, 150, 150, 150, 150, 150, 150, 150, 150, 
                    (0.01, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5.0000),
                    (1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0),
                    (0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1),
-                   (20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20),
-                   (0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2),
+                   (20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+                   (0.2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
                    20,
                    20,
                    1000,
@@ -89,7 +90,7 @@ class FamilyClusterFunc:
         self.matrixA = matrixA
         self.matrixV = matrixV
         self.matrixC = matrixC
-        self.nLineNumTime = c_int(60)
+        self.nLineNumTime = c_int(90)
         self.nColumnNumFreq = c_int(15)
         self.nTimeStep = c_float(10)
         self.Fs = c_float(100)
@@ -124,13 +125,15 @@ def find_data_from_matrix(OutputAV, matrixA, matrixV, matrixC, m, n):
     :param matrixA:
     :param matrixV:
     :param matrixC:
-    :param m:
-    :param n:
+    :param m: 行数
+    :param n: 列数
     :return:
     '''
-    A1 = c_types_2array_to_matrix(OutputAV, 15, 60)
-    A2 = c_types_2array_to_matrix(matrixA, 15, 60)
-    A3 = c_types_2array_to_matrix(matrixV, 15, 60)
+    A1 = c_types_2array_to_matrix(OutputAV, m, n)
+    print("----------------A1--------------------")
+    print(A1)
+    A2 = c_types_2array_to_matrix(matrixA, m, n)
+    A3 = c_types_2array_to_matrix(matrixV, m, n)
     print("----------------A2--------------------")
     print(A2)
 
@@ -139,8 +142,8 @@ def find_data_from_matrix(OutputAV, matrixA, matrixV, matrixC, m, n):
 
     # 找到A1中非-1元素的坐标
     coord1 = []
-    for i in range(5):
-        for j in range(5):
+    for i in range(m):
+        for j in range(n):
             if A1[i, j] != -1:
                 coord1.append((i, j))
 
@@ -165,11 +168,11 @@ def find_data_from_matrix(OutputAV, matrixA, matrixV, matrixC, m, n):
 
 if __name__ == '__main__':
     redis_client = RedisClient(host='localhost', port=6379, password='Founder123', db=0)
-    m = 15
-    n = 60
+    m = 600
+    n = 15
     OutputAV = ((ctypes.c_float * n) * m)()
     while True:
-        # 从redis队列中获取矩阵
+        # 从redis队列中获取矩阵：矩阵是15x600
         azimuth_matrix = get_matrix_from_redis(redis_client, redis_key_azimuth_matrix)
         print(f'redis->azimuth_matrix:{azimuth_matrix}')
         velocity_matrix = get_matrix_from_redis(redis_client, redis_key_velocity_matrix)
@@ -177,22 +180,30 @@ if __name__ == '__main__':
         corrcoef_matrix = get_matrix_from_redis(redis_client, redis_key_corrcoef_matrix)
         print(f'redis->corrcoef_matrix:{corrcoef_matrix}')
 
-        # 将矩阵转换成c_float类型的二维数组
-        matrixA = (ctypes.c_float * (m * n))(*np.ravel(azimuth_matrix).astype(np.float32))
-        matrixV = (ctypes.c_float * (m * n))(*np.ravel(velocity_matrix).astype(np.float32))
-        matrixC = (ctypes.c_float * (m * n))(*np.ravel(corrcoef_matrix).astype(np.float32))
+        # 将矩阵转置 然后转换成c_float类型的二维数组
+        matrixA = (ctypes.c_float * (m * n))(*np.ravel(azimuth_matrix.transpose()).astype(np.float32))
+        matrixV = (ctypes.c_float * (m * n))(*np.ravel(velocity_matrix.transpose()).astype(np.float32))
+        matrixC = (ctypes.c_float * (m * n))(*np.ravel(corrcoef_matrix.transpose()).astype(np.float32))
 
         # 使用reshape函数将一维数组转换成二维数组
         matrixA = np.ctypeslib.as_array(matrixA).reshape((m, n))
         matrixV = np.ctypeslib.as_array(matrixV).reshape((m, n))
         matrixC = np.ctypeslib.as_array(matrixC).reshape((m, n))
 
-        output_matrix(matrixA, "./matrixA.txt")
+        timestamp = time.time()
+        matrixA_file = './matrixA_' + str(timestamp) + '.txt'
+        matrixV_file = './matrixV_' + str(timestamp) + '.txt'
+        matrixC_file = './matrixC_' + str(timestamp) + '.txt'
+
+        output_matrix(matrixA, matrixA_file)
+        output_matrix(matrixV, matrixV_file)
+        output_matrix(matrixC, matrixC_file)
 
         # 2、PMCC计算
-        # FamilyClusterFunc(OutputAV, matrixA, matrixV, matrixC)
+        func = FamilyClusterFunc(OutputAV, matrixA, matrixV, matrixC)
+        func.ArrayFamilyForm()
 
-        # find_data_from_matrix(OutputAV, matrixA, matrixV, matrixC, 15, 60)
+        find_data_from_matrix(OutputAV, matrixA, matrixV, matrixC, m, n)
 
         # 数据打印
         # print_ctypes_array(OutputAV, "../output.txt")
@@ -200,7 +211,7 @@ if __name__ == '__main__':
         # 将c_float类型的二维数组转换成NumPy数组
         # np_OutputAV_arr = np.ctypeslib.as_array(c_OutputAV_arr).reshape((len(OutputAV), len(OutputAV[0])))
 
-        #db.update("UPDATE dp_single_array_event set matrixA=%s,matrixV=%s,matrixC=%s,matrixAV=%s", (matrixA, matrixV,
+        # db.update("UPDATE dp_single_array_event set matrixA=%s,matrixV=%s,matrixC=%s,matrixAV=%s", (matrixA, matrixV,
         #                                                                                            matrixC,
         #                                                                                            np_OutputAV_arr))
         # 暂停10秒

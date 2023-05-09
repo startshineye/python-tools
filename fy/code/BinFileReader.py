@@ -140,7 +140,7 @@ if __name__ == '__main__':
     start = time.time()
     while True:
         if time.time() - start > 3:  # 10秒推送一次
-            print(f'开始计数:{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')
+            print(f'begin 开始计数:{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')
             # 读取1000个元素
             data1 = np.frombuffer(f1.read(4000), np.float32)
             data2 = np.frombuffer(f2.read(4000), np.float32)

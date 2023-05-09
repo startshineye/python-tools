@@ -9,7 +9,7 @@ import time
 import json
 
 m = 15
-n = 600
+n = 60
 
 queue_name = 'data_queue'
 redis_key_azimuth_matrix = 'azimuth_matrix'
@@ -24,7 +24,7 @@ redis_key_AzimuthCalCallBack_Corrcoef = 'AzimuthCalCallBack_Corrcoef'
 def get_matrix_from_redis(redis_client, key):
     result = redis_client.get_matrix(key)
     if result is None:
-        return np.zeros((15, 600))
+        return np.zeros((m, n))
     return result
 
 
@@ -81,7 +81,7 @@ def push_data_to_matrix(redis_client, d):
 if __name__ == '__main__':
     redis_client = RedisClient(host='localhost', port=6379, password='Founder123', db=0)
     while True:
-        # 1、从redis里面获取对应的矩阵，如果没有的话初始化15x600的零矩阵
+        # 1、从redis里面获取对应的矩阵，如果没有的话初始化15x60的零矩阵
         d = get_c_array_from_redis(redis_client, queue_name)
         print(d)
         if d:
