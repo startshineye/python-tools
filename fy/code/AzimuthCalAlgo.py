@@ -10,6 +10,8 @@ from ctypes import *
 import time
 from MysqlDBUtils import MysqlDB
 import IdWorkers
+from CommonUtils import *
+import numpy as np
 
 
 # 自定义基类结构体
@@ -64,12 +66,13 @@ class AzimuthCalFunc:
         self.Azimuth = (c_float * 15)()
         self.Velocity = (c_float * 15)()
         self.Corrcoef = (c_float * 15)()
-        self.nCHState = ctypes.pointer((c_int * 5)())
+        self.nCHState = ctypes.pointer((c_int * 5)(1, 1, 1, 1, 1))
         self.nsigLen = c_int(15000)
         self.g_Fs = c_float(100)
         self.nDimMic = c_int(5)
-        self.Resolution = c_float(100)
-        self.Pos = ctypes.pointer(((ctypes.c_float * 2) * 5)())
+        self.Resolution = c_float(0.01)
+        pos_matrix = np.array([[998.8, 1284.5], [0, 0], [1460, -358.2], [1254, -130.1], [1254, -130.1]])
+        self.Pos = ctypes.pointer(ndarray_to_ctype_array(pos_matrix, 5, 2))
         self.sp = sp
 
     def get_buffer(self):
@@ -88,6 +91,7 @@ class AzimuthCalFunc:
         return c_float_array
 
     def AzimuthCalCallBack(self, buffer=None):
+
         if buffer is None:
             self.so.AzimuthCalCallBack(self.Azimuth, self.Velocity, self.Corrcoef, self.nCHState, self.sp,
                                        self.get_buffer(),

@@ -81,17 +81,18 @@ def push_data_to_matrix(redis_client, d):
 if __name__ == '__main__':
     redis_client = RedisClient(host='localhost', port=6379, password='Founder123', db=0)
     while True:
-        # 1、从redis里面获取对应的矩阵，如果没有的话初始化15x600的零矩阵
-        d = get_c_array_from_redis(redis_client, queue_name)
-        print(d)
-        if d:
-            print(d['k_azimuth'])
-            print(d['k_velocity'])
-            print(d['k_corrcoef'])
-            push_data_to_matrix(redis_client, d)
+        for i in range(600):
+            # 1、从redis里面获取对应的矩阵，如果没有的话初始化15x600的零矩阵
+            d = get_c_array_from_redis(redis_client, queue_name)
+            print(d)
+            if d:
+                print(d['k_azimuth'])
+                print(d['k_velocity'])
+                print(d['k_corrcoef'])
+                push_data_to_matrix(redis_client, d)
 
-        ndarray = get_matrix_from_redis(redis_client, redis_key_azimuth_matrix)
-        print(f'get_matrix_from_redis :{ndarray}')
+            ndarray = get_matrix_from_redis(redis_client, redis_key_azimuth_matrix)
+            print(f'get_matrix_from_redis ndarray :{ndarray} ndarray-r:{ndarray.shape[0]} ndarray-c:{ndarray.shape[1]}')
 
         #azimuth = (c_float * 15)()
         #azimuth_vector = np.ctypeslib.as_array(azimuth).reshape((m, 1))

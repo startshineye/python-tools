@@ -7,10 +7,10 @@ from datetime import datetime
 float_type = ctypes.c_float
 
 # 打开5个bin文件
-f1 = open('../data/xKEL1.bin', 'rb')
-f2 = open('../data/xKEL2.bin', 'rb')
-f3 = open('../data/xKEL3.bin', 'rb')
-f4 = open('../data/xKEL4.bin', 'rb')
+f1 = open('../data/01_A0.bin', 'rb')
+f2 = open('../data/01_B1.bin', 'rb')
+f3 = open('../data/01_B2.bin', 'rb')
+f4 = open('../data/01_B3.bin', 'rb')
 f5 = open('../data/xKEL5.bin', 'rb')
 
 # 定义5个一维buffer,每个长度15000

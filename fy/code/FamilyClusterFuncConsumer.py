@@ -51,6 +51,7 @@ class SysParameters(Structure):
         ("corrThd", c_float * 15),
         ("sigma_A", c_float * 15),
         ("sigma_V", c_float * 15),
+        ("sigma_F", c_float),
         ("sigma_T", c_float),
         ("timeThd", c_float),
         ("nFamilyMax", c_int),
@@ -58,8 +59,8 @@ class SysParameters(Structure):
         ("ThresholdDistance", c_float),
         ("VelocityMax", c_float),
         ("VelocityMin", c_float),
-        ("sigma_V", c_float * 15),
-        ("sigma_V", c_float * 15),
+        ("freqHighLim", c_float * 15),
+        ("freqLowLim", c_float * 15),
         ("overlapRate", c_float),
     ]
 
@@ -71,6 +72,7 @@ sp = SysParameters((150, 150, 150, 150, 150, 150, 150, 150, 150, 150, 150, 150, 
                    (0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1),
                    (20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
                    (0.2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+                   0.3,
                    20,
                    20,
                    1000,
@@ -97,9 +99,10 @@ class FamilyClusterFunc:
         self.structParameter2 = sp
 
     def ArrayFamilyForm(self):
-        self.so.ArrayFamilyForm(self.OutputAV, self.matrixA, self.matrixV,
-                                self.matrixC, self.nLineNumTime, self.nColumnNumFreq,
-                                self.nTimeStep, self.Fs, self.structParameter2)
+        self.so.ArrayFamilyForm(self.OutputAV, self.matrixA, self.matrixV, self.matrixC, self.nLineNumTime,
+                                self.nColumnNumFreq,
+                                self.nTimeStep, self.Fs,
+                                self.structParameter2)
 
     def get_OutputAV(self):
         return self.OutputAV
@@ -131,14 +134,18 @@ def find_data_from_matrix(OutputAV, matrixA, matrixV, matrixC, m, n):
     '''
     A1 = c_types_2array_to_matrix(OutputAV, m, n)
     print("----------------A1--------------------")
+    print(f'OutputAV-r:{A1.shape[0]} OutputAV-c:{A1.shape[1]} non_zero_rows:{non_zero_rows_matrix_calculate(A1)}')
     print(A1)
     A2 = c_types_2array_to_matrix(matrixA, m, n)
     A3 = c_types_2array_to_matrix(matrixV, m, n)
     print("----------------A2--------------------")
-    print(A2)
+    print(f'matrixA-r:{A2.shape[0]} matrixA-c:{A2.shape[1]} non_zero_rows:{non_zero_rows_matrix_calculate(A2)}'
+          f'non_zero_thous:{non_thous_rows_matrix_calculate(A2)}')
+    # print(A2)
 
     print("----------------A3--------------------")
-    print(A3)
+    print(f'matrixV-r:{A3.shape[0]} matrixV-c:{A3.shape[1]} non_zero_rows:{non_zero_rows_matrix_calculate(A3)}')
+    # print(A3)
 
     # 找到A1中非-1元素的坐标
     coord1 = []
@@ -148,7 +155,7 @@ def find_data_from_matrix(OutputAV, matrixA, matrixV, matrixC, m, n):
                 coord1.append((i, j))
 
     print("----------------coord1--------------------")
-    print(coord1)
+    # print(coord1)
 
     print("----------------result--------------------")
     # 生成json1和json2
@@ -162,8 +169,8 @@ def find_data_from_matrix(OutputAV, matrixA, matrixV, matrixC, m, n):
         json2[A1[x, y]] = str(A3[x, y])
 
     # 显示结果
-    print(json1)
-    print(json2)
+    # print(json1)
+    # print(json2)
 
 
 if __name__ == '__main__':
@@ -185,10 +192,19 @@ if __name__ == '__main__':
         matrixV = (ctypes.c_float * (m * n))(*np.ravel(velocity_matrix.transpose()).astype(np.float32))
         matrixC = (ctypes.c_float * (m * n))(*np.ravel(corrcoef_matrix.transpose()).astype(np.float32))
 
+        print(
+            f' 1---type(OutputAV):{type(OutputAV)} type(matrixA):{type(matrixA)} type(matrixV):{type(matrixV)} type(matrixC):{type(matrixC)}')
+
         # 使用reshape函数将一维数组转换成二维数组
-        matrixA = np.ctypeslib.as_array(matrixA).reshape((m, n))
-        matrixV = np.ctypeslib.as_array(matrixV).reshape((m, n))
-        matrixC = np.ctypeslib.as_array(matrixC).reshape((m, n))
+        non_zero_cols_matrixA = non_zero_cols_matrix_calculate(np.ctypeslib.as_array(matrixA).reshape((m, n)))
+        non_zero_cols_matrixV = non_zero_cols_matrix_calculate(np.ctypeslib.as_array(matrixV).reshape((m, n)))
+        non_zero_cols_matrixC = non_zero_cols_matrix_calculate(np.ctypeslib.as_array(matrixC).reshape((m, n)))
+
+        matrixA = ndarray_to_ctype_array(np.ctypeslib.as_array(matrixA).reshape((m, n)), m, n)
+        matrixV = ndarray_to_ctype_array(np.ctypeslib.as_array(matrixV).reshape((m, n)), m, n)
+        matrixC = ndarray_to_ctype_array(np.ctypeslib.as_array(matrixC).reshape((m, n)), m, n)
+
+        print(f'2---type(OutputAV):{type(OutputAV)} type(matrixA):{type(matrixA)} type(matrixV):{type(matrixV)} type(matrixC):{type(matrixC)}')
 
         timestamp = time.time()
         matrixA_file = './matrixA_' + str(timestamp) + '.txt'
@@ -199,9 +215,18 @@ if __name__ == '__main__':
         output_matrix(matrixV, matrixV_file)
         output_matrix(matrixC, matrixC_file)
 
+        print(f'non_zero_cols_matrixA:{non_zero_cols_matrixA} '
+              f'non_zero_cols_matrixV:{non_zero_cols_matrixV} '
+              f'non_zero_cols_matrixC:{non_zero_cols_matrixC}')
+
         # 2、PMCC计算
+        print(f'type(OutputAV):{type(OutputAV)} type(matrixA):{type(matrixA)} type(matrixV):{type(matrixV)} type(matrixC):{type(matrixC)}')
         func = FamilyClusterFunc(OutputAV, matrixA, matrixV, matrixC)
         func.ArrayFamilyForm()
+
+
+        print(
+            f'type(OutputAV):{type(OutputAV)} type(matrixA):{type(matrixA)} type(matrixV):{type(matrixV)} type(matrixC):{type(matrixC)}')
 
         find_data_from_matrix(OutputAV, matrixA, matrixV, matrixC, m, n)
 

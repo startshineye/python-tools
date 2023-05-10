@@ -8,6 +8,7 @@ import json
 from AzimuthCalAlgo import AzimuthCalFunc
 from RedisUtil import RedisClient
 import ctypes
+from CommonUtils import *
 
 redis_key_origin_buffer = 'origin_buffer'
 
@@ -38,24 +39,6 @@ def ctype_array_to_ndarray(src, m):
     return my_np_array
 
 
-def ndarray_to_ctype_array(src, m, n):
-    '''
-    将np的2维数组转换成ctype类型的2维数组
-    :param src: np的2维数
-    :param m: 数组行数
-    :param n: 数组列数
-    :return: ctype类型的2维数组
-    '''
-    b = (ctypes.c_float * n) * m
-    c = b()
-
-    for i in range(m):
-        for j in range(n):
-            c[i][j] = src[i][j]
-
-    return c
-
-
 def get_matrix_from_redis(redis_client, key):
     result = redis_client.get_matrix(key)
     if result is None:
@@ -81,23 +64,25 @@ if __name__ == '__main__':
     redis_client = RedisClient(host='localhost', port=6379, password='Founder123', db=0)
     func = AzimuthCalFunc()
     while True:
-        print(f'begin 开始计数:{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')
-        ndarray = get_matrix_from_redis(redis_client, redis_key_origin_buffer)
-        ctype_array_buffer = ndarray_to_ctype_array(ndarray, m, n)
-        func.AzimuthCalCallBack(ctype_array_buffer)
-        for a in func.Azimuth:
-            print(f'Azimuth: {a}')
 
-        for a in func.Velocity:
-            print(f'Velocity: {a}')
+        for i in range(600):
+            print(f'begin 开始计数:{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')
+            ndarray = get_matrix_from_redis(redis_client, redis_key_origin_buffer)
+            ctype_array_buffer = ndarray_to_ctype_array(ndarray, m, n)
+            func.AzimuthCalCallBack(ctype_array_buffer)
+            for a in func.Azimuth:
+                print(f'Azimuth: {a}')
 
-        for a in func.Corrcoef:
-            print(f'corrcoef: {a}')
+            for a in func.Velocity:
+                print(f'Velocity: {a}')
 
-        if func.Azimuth and func.Velocity and func.Corrcoef:
-            azimuth_ndarray = ctype_array_to_ndarray(func.Azimuth, 15)
-            velocity_ndarray = ctype_array_to_ndarray(func.Velocity, 15)
-            corrcoef_ndarray = ctype_array_to_ndarray(func.Corrcoef, 15)
-            gen_azimuth_velocity_corrcoef(redis_client, azimuth_ndarray, velocity_ndarray, corrcoef_ndarray)
+            for a in func.Corrcoef:
+                print(f'corrcoef: {a}')
+
+            if func.Azimuth and func.Velocity and func.Corrcoef:
+                azimuth_ndarray = ctype_array_to_ndarray(func.Azimuth, 15)
+                velocity_ndarray = ctype_array_to_ndarray(func.Velocity, 15)
+                corrcoef_ndarray = ctype_array_to_ndarray(func.Corrcoef, 15)
+                gen_azimuth_velocity_corrcoef(redis_client, azimuth_ndarray, velocity_ndarray, corrcoef_ndarray)
         # 暂停10秒
         time.sleep(10)
