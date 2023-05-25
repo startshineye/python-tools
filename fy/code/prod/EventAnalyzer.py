@@ -11,7 +11,6 @@
 from datetime import datetime, timedelta
 import mysql.connector
 import time
-import ctypes
 from CommonUtils import *
 from RedisUtil import RedisClient
 from AzimuthCalAlgo import AzimuthCalFunc
@@ -280,9 +279,17 @@ class EventAnalyzer:
 if __name__ == "__main__":
     redis_client = RedisClient(host='localhost', port=6379, password='Founder123', db=0)
     event = EventAnalyzer()
-    results = event.get_db_buffer()
-    OutputAV = np.zeros((60, 15))
-    siteId, collect_time = event.push_data_to_buffer(redis_client, results)
-    collect_time_delay_ten_second = collect_time + timedelta(seconds=10)
-    print(f'siteId:{siteId}, collect_time:{collect_time} type_collect_time:{type(collect_time)} new_collect_time:{collect_time_delay_ten_second}')
-    event.event_analysis(siteId, collect_time, collect_time_delay_ten_second, redis_client, 15000, 4, OutputAV)
+    while True:
+        try:
+            results = event.get_db_buffer()
+            OutputAV = np.zeros((60, 15))
+            siteId, collect_time = event.push_data_to_buffer(redis_client, results)
+            collect_time_delay_ten_second = collect_time + timedelta(seconds=10)
+            print(f'siteId:{siteId}, collect_time:{collect_time} type_collect_time:{type(collect_time)} new_collect_time:{collect_time_delay_ten_second}')
+            event.event_analysis(siteId, collect_time, collect_time_delay_ten_second, redis_client, 15000, 4, OutputAV)
+        except Exception as e:
+            # 捕获异常并进行处理
+            print("捕获到异常:", str(e))
+
+        # 等待10秒
+        time.sleep(10)
